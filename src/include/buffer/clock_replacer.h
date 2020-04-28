@@ -15,6 +15,7 @@
 #include <list>
 #include <mutex>  // NOLINT
 #include <vector>
+#include <map>
 
 #include "buffer/replacer.h"
 #include "common/config.h"
@@ -47,6 +48,10 @@ class ClockReplacer : public Replacer {
 
  private:
   // TODO(student): implement me!
+  std::map<frame_id_t, bool> page_ref;
+  std::vector<frame_id_t> pages;
+  int cursor = 0;
+  size_t max_size;
 };
 
 }  // namespace bustub
