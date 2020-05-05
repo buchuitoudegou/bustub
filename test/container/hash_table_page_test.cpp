@@ -23,7 +23,7 @@
 namespace bustub {
 
 // NOLINTNEXTLINE
-TEST(HashTablePageTest, DISABLED_HeaderPageSampleTest) {
+TEST(HashTablePageTest, HeaderPageSampleTest) {
   DiskManager *disk_manager = new DiskManager("test.db");
   auto *bpm = new BufferPoolManager(5, disk_manager);
 
@@ -61,7 +61,7 @@ TEST(HashTablePageTest, DISABLED_HeaderPageSampleTest) {
 }
 
 // NOLINTNEXTLINE
-TEST(HashTablePageTest, DISABLED_BlockPageSampleTest) {
+TEST(HashTablePageTest, BlockPageSampleTest) {
   DiskManager *disk_manager = new DiskManager("test.db");
   auto *bpm = new BufferPoolManager(5, disk_manager);
 
@@ -71,6 +71,9 @@ TEST(HashTablePageTest, DISABLED_BlockPageSampleTest) {
   auto block_page =
       reinterpret_cast<HashTableBlockPage<int, int, IntComparator> *>(bpm->NewPage(&block_page_id, nullptr)->GetData());
 
+  for (int i = 0; i < 10; i ++) {
+    EXPECT_FALSE(block_page->IsOccupied(i));
+  }
   // insert a few (key, value) pairs
   for (unsigned i = 0; i < 10; i++) {
     block_page->Insert(i, i, i);
