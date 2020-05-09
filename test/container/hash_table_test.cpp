@@ -17,6 +17,7 @@
 #include "container/hash/linear_probe_hash_table.h"
 #include "gtest/gtest.h"
 #include "murmur3/MurmurHash3.h"
+#include "storage/page/hash_table_header_page.h"
 
 namespace bustub {
 
@@ -26,7 +27,6 @@ TEST(HashTableTest, SampleTest) {
   auto *bpm = new BufferPoolManager(50, disk_manager);
 
   LinearProbeHashTable<int, int, IntComparator> ht("blah", bpm, IntComparator(), 1000, HashFunction<int>());
-
   // insert a few values
   for (int i = 0; i < 5; i++) {
     EXPECT_TRUE(ht.Insert(nullptr, i, i));
@@ -35,7 +35,7 @@ TEST(HashTableTest, SampleTest) {
     EXPECT_EQ(1, res.size()) << "Failed to insert " << i << std::endl;
     EXPECT_EQ(i, res[0]);
   }
-
+  
   // check if the inserted values are all there
   for (int i = 0; i < 5; i++) {
     std::vector<int> res;
@@ -102,6 +102,59 @@ TEST(HashTableTest, SampleTest) {
   remove("test.db");
   delete disk_manager;
   delete bpm;
+}
+
+template <typename KeyType, typename ValueType, typename KeyComparator>
+void insert_data(LinearProbeHashTable<KeyType, ValueType, KeyComparator>& ht, KeyType key, ValueType value) {
+  ht.Insert(nullptr, key, value);
+}
+
+template <typename KeyType, typename ValueType, typename KeyComparator>
+void remove_data(LinearProbeHashTable<KeyType, ValueType, KeyComparator>& ht, KeyType key, ValueType value) {
+  ht.Remove(nullptr, key, value);
+}
+
+TEST(HashTableTest, LockTest) {
+  auto *disk_manager = new DiskManager("test.db");
+  auto *bpm = new BufferPoolManager(50, disk_manager);
+  LinearProbeHashTable<int, int, IntComparator> ht("blah", bpm, IntComparator(), 2, HashFunction<int>());
+
+  // write-write conflict1
+  std::thread t1(insert_data<int, int, IntComparator>, std::ref(ht), 10, 20);
+  std::thread t2(insert_data<int, int, IntComparator>, std::ref(ht), 10, 30);
+  std::thread t3([](std::thread& t1, std::thread& t2) {
+    t1.detach();
+    t2.detach();
+  }, std::ref(t1), std::ref(t2));
+  t3.join();
+  std::vector<int> result;
+  ht.GetValue(nullptr, 10, &result);
+  EXPECT_EQ(2, result.size());
+
+  // write-write conflict2
+  t1 = std::thread(remove_data<int, int, IntComparator>, std::ref(ht), 10, 20);
+  t2 = std::thread(insert_data<int, int, IntComparator>, std::ref(ht), 10, 40);
+
+  std::thread t4([](std::thread& t1, std::thread& t2) {
+    t1.detach();
+    t2.detach();
+  }, std::ref(t1), std::ref(t2));
+  t4.join();
+  std::vector<int> result2;
+  ht.GetValue(nullptr, 10, &result2);
+  EXPECT_EQ(2, result2.size());
+
+  // resize
+  for (int i = 0; i < 800; ++i) {
+    ht.Insert(nullptr, i, i * 10);
+  }
+  EXPECT_TRUE(ht.Insert(nullptr, 20, 40));
+  EXPECT_EQ(4, ht.GetSize());
+  // Shutdown the disk manager and remove the temporary file we created.
+  disk_manager->ShutDown();
+  remove("test.db");
+  delete bpm;
+  delete disk_manager;
 }
 
 }  // namespace bustub
