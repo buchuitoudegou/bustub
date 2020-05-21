@@ -29,6 +29,10 @@
 #include "storage/table/tmp_tuple.h"
 #include "storage/table/tuple.h"
 
+#include "execution/executors/seq_scan_executor.h"
+#include "execution/executors/insert_executor.h"
+#include "execution/executors/aggregation_executor.h"
+
 namespace bustub {
 /**
  * IdentityHashFunction hashes everything to itself, i.e. h(x) = x.
@@ -99,7 +103,7 @@ class HashJoinExecutor : public AbstractExecutor {
                    std::unique_ptr<AbstractExecutor> &&right);
 
   /** @return the JHT in use. Do not modify this function, otherwise you will get a zero. */
-  // Uncomment me! const HT *GetJHT() const { return &jht_; }
+  const HT *GetJHT() const { return &jht_; }
 
   const Schema *GetOutputSchema() override { return plan_->OutputSchema(); }
 
@@ -138,8 +142,12 @@ class HashJoinExecutor : public AbstractExecutor {
   IdentityHashFunction jht_hash_fn_{};
 
   /** The hash table that we are using. */
-  // Uncomment me! HT jht_;
+  HT jht_;
   /** The number of buckets in the hash table. */
   static constexpr uint32_t jht_num_buckets_ = 2;
+  std::unique_ptr<AbstractExecutor> left;
+  std::unique_ptr<AbstractExecutor> right;
+  std::queue<Tuple> buffer_;
+  bool is_init_ = false;
 };
 }  // namespace bustub

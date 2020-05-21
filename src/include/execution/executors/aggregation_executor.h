@@ -26,6 +26,10 @@
 #include "storage/table/tuple.h"
 #include "type/value_factory.h"
 
+#include "execution/executors/seq_scan_executor.h"
+#include "execution/executors/insert_executor.h"
+#include "execution/executors/hash_join_executor.h"
+
 namespace bustub {
 /**
  * A simplified hash table that has all the necessary functionality for aggregations.
@@ -196,8 +200,9 @@ class AggregationExecutor : public AbstractExecutor {
   /** The child executor whose tuples we are aggregating. */
   std::unique_ptr<AbstractExecutor> child_;
   /** Simple aggregation hash table. */
-  // Uncomment me! SimpleAggregationHashTable aht_;
+  SimpleAggregationHashTable aht_;
   /** Simple aggregation hash table iterator. */
-  // Uncomment me! SimpleAggregationHashTable::Iterator aht_iterator_;
+  SimpleAggregationHashTable::Iterator aht_iterator_;
+  bool is_init = false;
 };
 }  // namespace bustub

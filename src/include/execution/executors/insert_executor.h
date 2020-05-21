@@ -20,6 +20,11 @@
 #include "execution/plans/insert_plan.h"
 #include "storage/table/tuple.h"
 
+#include "execution/executors/seq_scan_executor.h"
+#include "execution/executors/hash_join_executor.h"
+#include "execution/executors/aggregation_executor.h"
+
+
 namespace bustub {
 /**
  * InsertExecutor executes an insert into a table.
@@ -47,5 +52,7 @@ class InsertExecutor : public AbstractExecutor {
  private:
   /** The insert plan node to be executed. */
   const InsertPlanNode *plan_;
+  std::unique_ptr<AbstractExecutor> child;
+  bool is_init_ = false;
 };
 }  // namespace bustub
